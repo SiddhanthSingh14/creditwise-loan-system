@@ -1,3 +1,39 @@
+st.markdown("""
+<style>
+
+/* Main page background */
+[data-testid="stAppViewContainer"] {
+    background-color: #ffffff;
+}
+
+/* Sidebar background */
+[data-testid="stSidebar"] {
+    background-color: #f7f3e9;
+}
+
+/* Header background */
+[data-testid="stHeader"] {
+    background-color: #ffffff;
+}
+
+/* Sidebar text */
+[data-testid="stSidebar"] * {
+    color: #333333;
+}
+
+/* Buttons styling */
+.stButton>button {
+    background-color: #2c7be5;
+    color: white;
+    border-radius: 8px;
+    height: 40px;
+    width: 220px;
+}
+
+</style>
+""", unsafe_allow_html=True)
+
+
 import streamlit as st
 import pickle
 import numpy as np
@@ -118,3 +154,4 @@ if st.button("🔍 Predict Loan Approval"):
 
 st.divider()
 st.caption("CreditWise ML Loan Prediction • Built with Streamlit")
+
