@@ -1,99 +1,94 @@
 import streamlit as st
 import pickle
 import numpy as np
-import pandas as pd
 
-# Load Model and Scaler
+# -----------------------
+# Load model and scaler
+# -----------------------
 model = pickle.load(open("loan_model.pkl", "rb"))
 scaler = pickle.load(open("scaler.pkl", "rb"))
 
-st.set_page_config(
-    page_title="CreditWise Loan Approval",
-    layout="wide",
-    page_icon="🏦"
-)
+st.set_page_config(page_title="CreditWise Loan System", layout="wide")
 
-# Header
+# -----------------------
+# Custom Light + Cream UI
+# -----------------------
+st.markdown("""
+<style>
+
+[data-testid="stAppViewContainer"] {
+    background-color: #ffffff;
+}
+
+[data-testid="stSidebar"] {
+    background-color: #f7f3e9;
+}
+
+[data-testid="stHeader"] {
+    background-color: #ffffff;
+}
+
+.stButton>button {
+    background-color: #2563eb;
+    color: white;
+    border-radius: 8px;
+    height: 42px;
+    width: 220px;
+}
+
+</style>
+""", unsafe_allow_html=True)
+
+# -----------------------
+# Title
+# -----------------------
 st.title("🏦 CreditWise Loan Approval System")
-st.markdown("Machine Learning powered loan approval prediction system.")
+st.write("Machine Learning powered loan approval prediction system.")
 
 st.divider()
 
+# -----------------------
+# Detect model feature count
+# -----------------------
+try:
+    feature_names = scaler.feature_names_in_
+    num_features = len(feature_names)
+except:
+    num_features = scaler.n_features_in_
+    feature_names = [f"Feature {i+1}" for i in range(num_features)]
+
+# -----------------------
 # Sidebar Inputs
+# -----------------------
 st.sidebar.header("Applicant Information")
 
-applicant_income = st.sidebar.number_input("Applicant Income", min_value=0.0)
-coapplicant_income = st.sidebar.number_input("Coapplicant Income", min_value=0.0)
+inputs = []
 
-age = st.sidebar.slider("Age", 18, 70, 30)
-dependents = st.sidebar.slider("Dependents", 0, 5, 0)
+for name in feature_names:
+    value = st.sidebar.number_input(name, value=0.0)
+    inputs.append(value)
 
-savings = st.sidebar.number_input("Savings", min_value=0.0)
-existing_loans = st.sidebar.slider("Existing Loans", 0, 5, 0)
+# -----------------------
+# Dashboard preview
+# -----------------------
+cols = st.columns(min(3, num_features))
 
-loan_amount = st.sidebar.number_input("Loan Amount", min_value=0.0)
-loan_term = st.sidebar.slider("Loan Term (months)", 6, 360, 120)
-
-collateral_value = st.sidebar.number_input("Collateral Value", min_value=0.0)
-
-employment_status = st.sidebar.selectbox(
-    "Employment Status",
-    ["Employed", "Self-Employed", "Unemployed"]
-)
-
-marital_status = st.sidebar.selectbox(
-    "Marital Status",
-    ["Single", "Married"]
-)
-
-# Convert categorical variables
-employment_map = {
-    "Employed": 0,
-    "Self-Employed": 1,
-    "Unemployed": 2
-}
-
-marital_map = {
-    "Single": 0,
-    "Married": 1
-}
-
-employment_val = employment_map[employment_status]
-marital_val = marital_map[marital_status]
-
-# Dashboard Metrics
-col1, col2, col3 = st.columns(3)
-
-col1.metric("Applicant Income", f"${applicant_income:,.0f}")
-col2.metric("Loan Amount", f"${loan_amount:,.0f}")
-col3.metric("Savings", f"${savings:,.0f}")
+for i in range(min(3, num_features)):
+    cols[i].metric(feature_names[i], f"{inputs[i]}")
 
 st.divider()
 
-# Prediction Button
+# -----------------------
+# Prediction
+# -----------------------
 if st.button("🔍 Predict Loan Approval"):
 
-    features = np.array([[
-        applicant_income,
-        coapplicant_income,
-        age,
-        dependents,
-        savings,
-        existing_loans,
-        loan_amount,
-        loan_term,
-        collateral_value,
-        employment_val,
-        marital_val
-    ]])
+    features = np.array(inputs).reshape(1, -1)
 
-    # Scale features
     scaled_features = scaler.transform(features)
 
-    # Prediction
     prediction = model.predict(scaled_features)
 
-    # Probability if available
     if hasattr(model, "predict_proba"):
         prob = model.predict_proba(scaled_features)[0][1]
     else:
@@ -101,22 +96,19 @@ if st.button("🔍 Predict Loan Approval"):
 
     st.divider()
 
-    # Result
     if prediction[0] == 1:
         st.success("✅ Loan Approved")
 
         if prob is not None:
             st.progress(float(prob))
-            st.write(f"Approval Confidence: {prob*100:.2f}%")
+            st.write(f"Approval Probability: {prob*100:.2f}%")
 
     else:
         st.error("❌ Loan Rejected")
 
         if prob is not None:
             st.progress(float(prob))
-            st.write(f"Approval Confidence: {prob*100:.2f}%")
+            st.write(f"Approval Probability: {prob*100:.2f}%")
 
 st.divider()
 st.caption("CreditWise ML Loan Prediction • Built with Streamlit")
-
-
