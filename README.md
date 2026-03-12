@@ -1,5 +1,8 @@
 # CreditWise Loan Approval System
 
+## Live Demo
+https://creditwise-loan-system-cbyfuc5vnzdlxud6ckgbag.streamlit.app
+
 CreditWise is a machine learning project that predicts whether a loan should be approved based on applicant financial data.
 
 ## Project Overview
